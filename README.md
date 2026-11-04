@@ -7,8 +7,9 @@ Fight through **five waves** of ronin, ninja, and the Iron Monk before facing th
 ## Features
 
 - **Parry system** — a well-timed parry staggers the attacker and builds posture damage; break an enemy's guard for a free punish.
+- **Three-hit blade combo** — `J` chains a wide side cut into a straight pierce, then a slow-charging **moonfall** finisher with a golden charge ring and heavy damage. The finisher takes a long time to wind up, so commit carefully.
 - **Dodge and jump** — dodge with invincibility frames and perfect-dodge rewards; jump over sweeping red attacks.
-- **Enemies play by the same rules** — opponents attack, block, parry, dodge, jump, and punish openings.
+- **Enemies play by the same rules** — opponents mix wide side cuts, straight thrusts, and charged overheads, and they also block, parry, dodge, jump, and punish openings.
 - **Five-wave campaign** — escalating duels, a two-phase boss, wave banners, healing between waves, score, best score, and victory/defeat screens.
 - **Responsive controls** — keyboard on desktop, on-screen touch buttons on phones and tablets, and gamepad support.
 - **Pixel presentation** — procedurally drawn characters and scenery, sword trails, particles, screen shake, hit-stop, and procedural WebAudio music and sound effects.
@@ -19,11 +20,19 @@ Fight through **five waves** of ronin, ninja, and the Iron Monk before facing th
 | --- | --- | --- |
 | Move | `A` / `D` or `←` / `→` | ◀ / ▶ |
 | Jump | `Space` or `W` | ↑ |
-| Attack | `J` | STRIKE |
+| Attack / combo | `J` (press three times) | STRIKE |
 | Parry | `K` | PARRY |
 | Dodge | `L` | DODGE |
 | Pause | `P` or `Esc` | Pause button |
 | Mute | `M` | ♪ button |
+
+The player combo is **side cut → pierce → charged moonfall**. The third hit has a long golden wind-up and deals much more damage than the first two.
+
+Enemy attacks now mix three reads:
+
+- **White diamond** — a side cut that can be parried.
+- **Amber line** — a straight thrust with longer range but a lower profile; parry it or jump it.
+- **Red mark** — an unblockable overhead or lunge; dodge or jump it.
 
 Gamepads are supported through the standard Gamepad API: left stick / D-pad to move, face buttons to jump, attack, parry, and dodge, and Start to pause.
 
@@ -46,6 +55,8 @@ Then visit `http://localhost:3002`.
 ## Tips
 
 - A **white glint** means the attack can be parried. A **red mark** means it cannot — dodge or jump instead.
+- An **amber line** marks a straight thrust. It reaches farther than a side cut, but a well-timed jump clears it.
+- Finish the three-hit combo only when the enemy is staggered or has committed to a slow attack. The charged moonfall leaves you open while it winds up.
 - Parrying at the last moment is stronger and counts as a perfect parry.
 - Watch enemy posture: when it fills, their guard breaks and they are open to a heavy combo.
 - Preserve health between waves; a small heal is granted after each clear.
