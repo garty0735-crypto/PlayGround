@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#070916" />
+    <meta name="description" content="RAIL RUSH — a neon-soaked 3D subway endless runner. Switch lanes, jump barriers, slide under signs, and outrun the last train." />
+    <title>RAIL RUSH — Neon Subway Runner</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23080a18'/%3E%3Cpath d='M20 50V14h19c8 0 13 5 13 12 0 5-3 9-8 11l10 13H41L31 38h-2v12H20zm9-20h9c3 0 5-1 5-4s-2-4-5-4h-9v8z' fill='%23ffb03a'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="RAIL RUSH 3D game"></canvas>
+      <div class="vignette" aria-hidden="true"></div>
+      <div class="grain" aria-hidden="true"></div>
+      <div class="scanlines" aria-hidden="true"></div>
+      <div id="speed-lines" aria-hidden="true"></div>
+
+      <div id="loading" class="loading">
+        <div class="loading-mark"><span>R</span><span>R</span></div>
+        <div class="loading-text">WARMING UP THE LINE</div>
+        <div class="loading-bar"><i></i></div>
+      </div>
+
+      <section id="menu" class="screen menu-screen" aria-label="Main menu">
+        <div class="menu-top">
+          <div class="brand-chip"><b>RR</b><span>RAIL RUSH<br />NIGHT LINE 88</span></div>
+          <div class="menu-top-right">
+            <button class="icon-btn" id="btn-audio-menu" aria-label="Toggle sound" title="Sound">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2-3.74v7.48a4.5 4.5 0 0 0 2-3.74zm-2-8.5v2.06a7 7 0 0 1 0 12.88v2.06a9 9 0 0 0 0-17z"/></svg>
+            </button>
+            <div class="best-chip"><span>PERSONAL BEST</span><strong id="menu-best">000000</strong></div>
+          </div>
+        </div>
+
+        <div class="menu-content">
+          <div class="eyebrow"><i></i> ENDLESS SERVICE // LINE 88</div>
+          <h1 class="game-title" data-text="RAIL RUSH">
+            <span class="title-rail">RAIL</span>
+            <span class="title-rush">RUSH</span>
+            <span class="title-sticker">NO BRAKES</span>
+          </h1>
+          <p class="tagline">Outrun the last train.<br /><em>Own the night.</em></p>
+
+          <div class="menu-actions">
+            <button id="btn-play" class="btn btn-primary">
+              <span class="btn-label">RUN THE LINE</span>
+              <span class="btn-arrow">→</span>
+            </button>
+            <button id="btn-how" class="btn btn-ghost">HOW TO RUN</button>
+          </div>
+
+          <div class="menu-quickstats">
+            <div><span>BEST RUN</span><strong id="menu-best-2">0</strong></div>
+            <div><span>COINS BANKED</span><strong id="menu-coins">0</strong></div>
+            <div><span>TOTAL RUNS</span><strong id="menu-runs">0</strong></div>
+          </div>
+        </div>
+
+        <div class="menu-bottom">
+          <div class="key-hints desktop-controls">
+            <div><kbd>A</kbd><kbd>D</kbd><span>SWITCH</span></div>
+            <div><kbd>W</kbd><span>JUMP</span></div>
+            <div><kbd>S</kbd><span>SLIDE</span></div>
+            <div><kbd>P</kbd><span>PAUSE</span></div>
+          </div>
+          <div class="mobile-hint touch-controls-hint">SWIPE TO MOVE · TAP TO START</div>
+          <div class="stamp">3 LANES<br />1 LIFE<br /><b>NO EXCUSES</b></div>
+        </div>
+        <div class="version">THREE.JS · VOL. 01</div>
+      </section>
+
+      <section id="hud" class="hud" aria-label="Game status">
+        <div class="hud-top">
+          <div class="score-block">
+            <span class="hud-label">RUN SCORE</span>
+            <div class="score-row"><strong id="score">000000</strong><span id="multiplier" class="multiplier">x1</span></div>
+            <div id="best-live" class="best-live">BEST 000000</div>
+          </div>
+          <div class="distance-block">
+            <span class="hud-label">DISTANCE</span>
+            <strong><span id="distance">0</span><small>m</small></strong>
+          </div>
+          <div class="hud-right">
+            <div class="coin-block"><span class="coin-icon"></span><strong id="coins">0</strong></div>
+            <button id="btn-pause" class="icon-btn hud-icon" aria-label="Pause game">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zm6 0h4v14h-4z"/></svg>
+            </button>
+            <button id="btn-audio" class="icon-btn hud-icon" aria-label="Toggle sound">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2-3.74v7.48a4.5 4.5 0 0 0 2-3.74zm-2-8.5v2.06a7 7 0 0 1 0 12.88v2.06a9 9 0 0 0 0-17z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="powerup-rail" id="powerup-rail">
+          <div class="powerup magnet" id="powerup-magnet"><span class="pu-icon">U</span><div><b>MAGNET</b><i><em></em></i></div></div>
+          <div class="powerup shield" id="powerup-shield"><span class="pu-icon">S</span><div><b>SHIELD</b><i><em></em></i></div></div>
+        </div>
+
+        <div class="hud-bottom">
+          <div class="speed-block">
+            <div class="speed-copy"><span class="hud-label">LINE SPEED</span><strong id="speed-readout">16<small> km/h</small></strong></div>
+            <div class="speed-track"><i id="speed-fill"></i></div>
+          </div>
+          <div class="tutorial-strip" id="tutorial-strip">
+            <span><b>A</b><b>D</b> SWITCH LANES</span>
+            <span><b>SPACE</b> JUMP</span>
+            <span><b>S</b> SLIDE</span>
+          </div>
+          <div class="combo-block" id="combo-block">
+            <span class="hud-label">COIN COMBO</span>
+            <strong id="combo">0</strong>
+            <div class="combo-track"><i id="combo-fill"></i></div>
+          </div>
+        </div>
+      </section>
+
+      <div id="countdown" class="countdown" aria-live="assertive">
+        <span id="countdown-num">3</span>
+        <small>GET READY</small>
+      </div>
+
+      <div id="toast-layer" class="toast-layer" aria-live="polite"></div>
+
+      <section id="pause" class="screen overlay-screen hidden" aria-label="Pause menu">
+        <div class="overlay-card">
+          <span class="kicker">SERVICE PAUSED</span>
+          <h2>TAKE A BREATH</h2>
+          <p>The line isn't going anywhere. Probably.</p>
+          <div class="card-actions">
+            <button id="btn-resume" class="btn btn-primary"><span>BACK TO THE RUN</span><span class="btn-arrow">→</span></button>
+            <button id="btn-quit" class="btn btn-ghost">END RUN</button>
+          </div>
+          <div class="pause-controls"><kbd>P</kbd> RESUME · <kbd>ESC</kbd> MENU</div>
+        </div>
+      </section>
+
+      <section id="gameover" class="screen overlay-screen hidden" aria-label="Game over">
+        <div class="overlay-card gameover-card">
+          <div class="gameover-head">
+            <span class="kicker" id="gameover-kicker">END OF THE LINE</span>
+            <div id="new-best" class="new-best">NEW PERSONAL BEST</div>
+          </div>
+          <h2>RUN ENDED</h2>
+          <div class="results-grid">
+            <div class="result-main"><span>FINAL SCORE</span><strong id="final-score">0</strong></div>
+            <div><span>DISTANCE</span><strong id="final-distance">0<small>m</small></strong></div>
+            <div><span>COINS</span><strong id="final-coins">0</strong></div>
+            <div><span>BEST</span><strong id="final-best">0</strong></div>
+          </div>
+          <div class="card-actions">
+            <button id="btn-retry" class="btn btn-primary"><span>RUN IT BACK</span><span class="btn-arrow">↻</span></button>
+            <button id="btn-menu" class="btn btn-ghost">MAIN MENU</button>
+          </div>
+          <div class="tip-line" id="gameover-tip">TIP / Slide under low signs. Jump the striped barriers.</div>
+        </div>
+      </section>
+
+      <section id="howto" class="screen overlay-screen hidden" aria-label="How to play">
+        <div class="overlay-card howto-card">
+          <button class="modal-close" id="btn-close-how" aria-label="Close">×</button>
+          <span class="kicker">THE RULES OF THE LINE</span>
+          <h2>HOW TO RUN</h2>
+          <div class="howto-grid">
+            <div class="howto-item">
+              <div class="howto-visual lanes"><i></i><i></i><i></i><span>← →</span></div>
+              <h3>SWITCH LANES</h3>
+              <p>Three tracks. Find the gap. <kbd>A</kbd><kbd>D</kbd> or swipe sideways.</p>
+            </div>
+            <div class="howto-item">
+              <div class="howto-visual jump"><span>↑</span><i></i></div>
+              <h3>JUMP</h3>
+              <p>Clear barriers and crates. <kbd>W</kbd> <kbd>SPACE</kbd> or swipe up.</p>
+            </div>
+            <div class="howto-item">
+              <div class="howto-visual slide"><span>↓</span><i></i></div>
+              <h3>SLIDE</h3>
+              <p>Kick under low clearance signs. <kbd>S</kbd> or swipe down.</p>
+            </div>
+            <div class="howto-item">
+              <div class="howto-visual power"><span>U</span><b>+</b><span>S</span></div>
+              <h3>GRAB POWER</h3>
+              <p>The magnet pulls coins in. The shield eats one crash.</p>
+            </div>
+          </div>
+          <div class="howto-extra">
+            <span><b>NEAR MISS</b> Thread past trains for bonus score.</span>
+            <span><b>COMBO</b> Chain coins to raise your multiplier.</span>
+          </div>
+          <button id="btn-how-play" class="btn btn-primary"><span>I'M READY</span><span class="btn-arrow">→</span></button>
+        </div>
+      </section>
+
+      <div id="touch-controls" class="touch-pad" aria-label="Touch controls">
+        <div class="touch-group">
+          <button class="touch-btn" data-action="left" aria-label="Move left">←</button>
+          <button class="touch-btn" data-action="right" aria-label="Move right">→</button>
+        </div>
+        <div class="touch-group touch-group-vertical">
+          <button class="touch-btn touch-jump" data-action="jump" aria-label="Jump">↑</button>
+          <button class="touch-btn" data-action="slide" aria-label="Slide">↓</button>
+        </div>
+      </div>
+
+      <div id="flash" aria-hidden="true"></div>
+      <div id="hit-vignette" aria-hidden="true"></div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

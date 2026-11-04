@@ -1,0 +1,19 @@
+{
+  "name": "rail-rush",
+  "private": true,
+  "version": "1.0.0",
+  "description": "RAIL RUSH — a neon subway endless runner built with Three.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3002",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 3002",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.11"
+  }
+}
