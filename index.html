@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#08060d">
+  <meta name="description" content="Blade Wind — a pixel-art samurai duel of parries, dodges, and moonlight.">
+  <title>Blade Wind — Moonlit Samurai Duel</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="app">
+    <div id="frame" aria-label="Blade Wind game">
+      <canvas id="game" width="640" height="360" aria-label="Game screen"></canvas>
+      <div class="screen-fx scanlines" aria-hidden="true"></div>
+      <div class="screen-fx vignette" aria-hidden="true"></div>
+
+      <button id="soundBtn" class="icon-button" type="button" aria-label="Toggle sound" title="Sound (M)">
+        <span id="soundIcon">♪</span>
+      </button>
+
+      <section id="titleScreen" class="screen title-screen">
+        <div class="title-panel">
+          <div class="seal" aria-hidden="true">刃</div>
+          <p class="eyebrow">A DUEL IN THE MOONLIGHT</p>
+          <h1 class="logo">BLADE<span>WIND</span></h1>
+          <p class="jp-title">月 下 の 刃</p>
+          <p class="tagline">Parry. Read. Strike.</p>
+
+          <button id="startBtn" class="pixel-button primary" type="button">BEGIN THE DUEL</button>
+
+          <div class="controls-grid" aria-label="Controls">
+            <div class="control-card">
+              <div class="keys"><kbd>A</kbd><kbd>D</kbd></div>
+              <span>MOVE</span>
+            </div>
+            <div class="control-card">
+              <div class="keys"><kbd>SPACE</kbd></div>
+              <span>JUMP</span>
+            </div>
+            <div class="control-card">
+              <div class="keys"><kbd>J</kbd></div>
+              <span>ATTACK</span>
+            </div>
+            <div class="control-card accent">
+              <div class="keys"><kbd>K</kbd></div>
+              <span>PARRY</span>
+            </div>
+            <div class="control-card">
+              <div class="keys"><kbd>L</kbd></div>
+              <span>DODGE</span>
+            </div>
+            <div class="control-card">
+              <div class="keys"><kbd>P</kbd></div>
+              <span>PAUSE</span>
+            </div>
+          </div>
+
+          <p class="tip"><span class="glint-dot"></span> White glint = parry &nbsp;·&nbsp; <span class="red-dot"></span> red mark = dodge or jump</p>
+          <p class="best">BEST SCORE <span id="bestScore">0</span></p>
+        </div>
+        <p class="credit">FIVE WAVES · NO MERCY</p>
+      </section>
+
+      <section id="pauseScreen" class="screen overlay hidden">
+        <div class="dialog">
+          <p class="eyebrow">THE MOON HOLDS ITS BREATH</p>
+          <h2>PAUSED</h2>
+          <div class="pause-controls">
+            <p><kbd>A</kbd><kbd>D</kbd> move</p>
+            <p><kbd>SPACE</kbd> jump</p>
+            <p><kbd>J</kbd> attack</p>
+            <p><kbd>K</kbd> parry</p>
+            <p><kbd>L</kbd> dodge</p>
+            <p><kbd>P</kbd> resume</p>
+          </div>
+          <div class="button-row">
+            <button id="resumeBtn" class="pixel-button primary" type="button">RESUME</button>
+            <button id="pauseRestartBtn" class="pixel-button" type="button">RESTART</button>
+          </div>
+          <p class="dialog-note">Perfect parries break their guard. Red attacks cannot be parried.</p>
+        </div>
+      </section>
+
+      <section id="endScreen" class="screen overlay hidden">
+        <div class="dialog end-dialog">
+          <p id="endEyebrow" class="eyebrow">THE DUEL ENDS</p>
+          <h2 id="endTitle">DEFEATED</h2>
+          <p id="endMessage" class="end-message">The moonlight is patient. Rise again.</p>
+          <div class="stats">
+            <div><span>SCORE</span><strong id="endScore">0</strong></div>
+            <div><span>FOES FELLED</span><strong id="endKills">0</strong></div>
+            <div><span>PERFECT PARRIES</span><strong id="endParries">0</strong></div>
+            <div><span>BEST COMBO</span><strong id="endCombo">0</strong></div>
+            <div><span>TIME</span><strong id="endTime">0:00</strong></div>
+          </div>
+          <button id="restartBtn" class="pixel-button primary" type="button">DUEL AGAIN</button>
+          <p class="dialog-note">Press <kbd>ENTER</kbd> to rise.</p>
+        </div>
+      </section>
+
+      <div id="touchControls" class="touch-controls hidden" aria-hidden="true">
+        <div class="touch-cluster move-cluster">
+          <button class="touch-btn" data-action="left" aria-label="Move left">◀</button>
+          <button class="touch-btn" data-action="right" aria-label="Move right">▶</button>
+          <button class="touch-btn jump" data-action="jump" aria-label="Jump">↑</button>
+        </div>
+        <div class="touch-cluster action-cluster">
+          <button class="touch-btn parry" data-action="parry" aria-label="Parry"><span>K</span>PARRY</button>
+          <button class="touch-btn dodge" data-action="dodge" aria-label="Dodge"><span>L</span>DODGE</button>
+          <button class="touch-btn attack" data-action="attack" aria-label="Attack"><span>J</span>STRIKE</button>
+        </div>
+      </div>
+
+      <div id="rotateHint" class="rotate-hint hidden">Turn your device sideways for a wider blade</div>
+    </div>
+    <p class="outside-note">A / D move · SPACE jump · J attack · K parry · L dodge · P pause · M mute</p>
+  </div>
+
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
