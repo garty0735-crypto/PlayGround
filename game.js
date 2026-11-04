@@ -199,9 +199,21 @@ class SoundEngine {
     src.stop(t + dur + 0.03);
   }
 
-  swing(heavy = false) {
+  swing(heavy = false, style = 'side') {
+    if (style === 'thrust') {
+      this.noise(heavy ? 0.14 : 0.09, heavy ? 0.19 : 0.11, heavy ? 1500 : 1900, 0.9, 'bandpass', 0, 320);
+      if (heavy) this.tone(185, 0.1, 'triangle', 0.025, 0, 90);
+      return;
+    }
     this.noise(heavy ? 0.17 : 0.1, heavy ? 0.2 : 0.12, heavy ? 700 : 1100, 0.7, 'bandpass', 0, heavy ? 180 : 320);
     if (heavy) this.tone(150, 0.1, 'triangle', 0.03, 0, 80);
+  }
+  charge() {
+    if (!this.ctx || this.muted) return;
+    const t = this.ctx.currentTime;
+    this.tone(150, 0.58, 'sine', 0.022, t, 420);
+    this.tone(300, 0.5, 'triangle', 0.012, t, 760);
+    this.noise(0.46, 0.035, 260, 1.2, 'bandpass', t, 1450);
   }
   hit(heavy = false) {
     this.noise(heavy ? 0.13 : 0.08, heavy ? 0.3 : 0.2, heavy ? 420 : 700, 0.8, 'lowpass');
@@ -523,82 +535,103 @@ const KINDS = {
 
 const PLAYER_ATTACKS = [
   {
-    name: 'cut', windup: 0.07, active: 0.09, recover: 0.17,
-    damage: 10, range: 58, height: 38, posture: 8, knock: 95,
-    lunge: 125, hurt: 0.2, swingStart: -1.7, swingEnd: 1.05,
+    name: 'sidecut', style: 'side', comboLabel: 'SIDE CUT',
+    windup: 0.07, active: 0.1, recover: 0.18,
+    damage: 9, range: 64, height: 38, posture: 8, knock: 100,
+    lunge: 125, hurt: 0.2, backReach: 18, swingStart: -2.05, swingEnd: 1.12,
   },
   {
-    name: 'rise', windup: 0.09, active: 0.09, recover: 0.19,
-    damage: 11, range: 62, height: 38, posture: 9, knock: 108,
-    lunge: 135, hurt: 0.2, swingStart: -1.85, swingEnd: 1.15,
+    name: 'pierce', style: 'thrust', comboLabel: 'PIERCE',
+    windup: 0.09, active: 0.08, recover: 0.2,
+    damage: 12, range: 80, height: 28, posture: 11, knock: 125,
+    lunge: 165, hurt: 0.22, backReach: 4,
   },
   {
-    name: 'moonfall', windup: 0.15, active: 0.12, recover: 0.3,
-    damage: 20, range: 70, height: 42, posture: 18, knock: 220,
-    lunge: 165, hurt: 0.34, swingStart: -2.75, swingEnd: 0.72, heavy: true,
+    name: 'moonfall', style: 'overhead', comboLabel: 'CHARGED MOONFALL',
+    windup: 0.62, active: 0.14, recover: 0.4,
+    damage: 32, range: 86, height: 48, posture: 28, knock: 300,
+    lunge: 140, hurt: 0.48, backReach: 10,
+    swingStart: -2.95, swingEnd: 0.5, heavy: true, charged: true,
   },
 ];
 
 const MOVES = {
   r_slash: {
-    windup: 0.4, active: 0.09, recover: 0.36, damage: 10, range: 64,
-    height: 38, posture: 10, knock: 112, lunge: 90, hurt: 0.24,
-    swingStart: -1.75, swingEnd: 1.0,
+    style: 'side', windup: 0.4, active: 0.09, recover: 0.36, damage: 10, range: 66,
+    height: 38, posture: 10, knock: 112, lunge: 90, hurt: 0.24, backReach: 18,
+    swingStart: -1.95, swingEnd: 1.08,
   },
   r_slash2: {
-    windup: 0.24, active: 0.08, recover: 0.42, damage: 11, range: 66,
-    height: 38, posture: 11, knock: 122, lunge: 112, hurt: 0.24,
-    swingStart: -1.7, swingEnd: 1.1,
+    style: 'side', windup: 0.24, active: 0.08, recover: 0.42, damage: 11, range: 68,
+    height: 38, posture: 11, knock: 122, lunge: 112, hurt: 0.24, backReach: 16,
+    swingStart: -1.7, swingEnd: 1.12,
+  },
+  r_thrust: {
+    style: 'thrust', windup: 0.36, active: 0.08, recover: 0.42, damage: 12, range: 86,
+    height: 28, posture: 11, knock: 135, lunge: 190, hurt: 0.25, backReach: 4,
   },
   r_heavy: {
-    windup: 0.72, active: 0.12, recover: 0.55, damage: 19, range: 74,
-    height: 40, posture: 16, knock: 195, lunge: 82, hurt: 0.4,
-    swingStart: -2.7, swingEnd: 0.62, heavy: true, unblockable: true,
+    style: 'overhead', windup: 0.72, active: 0.12, recover: 0.55, damage: 19, range: 74,
+    height: 40, posture: 16, knock: 195, lunge: 82, hurt: 0.4, backReach: 10,
+    swingStart: -2.7, swingEnd: 0.62, heavy: true, unblockable: true, charged: true,
   },
   n_slash: {
-    windup: 0.25, active: 0.07, recover: 0.3, damage: 8, range: 58,
-    height: 38, posture: 8, knock: 90, lunge: 120, hurt: 0.2,
-    swingStart: -1.55, swingEnd: 1.0,
+    style: 'side', windup: 0.25, active: 0.07, recover: 0.3, damage: 8, range: 60,
+    height: 38, posture: 8, knock: 90, lunge: 120, hurt: 0.2, backReach: 16,
+    swingStart: -1.55, swingEnd: 1.04,
+  },
+  n_thrust: {
+    style: 'thrust', windup: 0.24, active: 0.06, recover: 0.32, damage: 9, range: 80,
+    height: 26, posture: 8, knock: 105, lunge: 185, hurt: 0.2, backReach: 4,
   },
   n_dash: {
-    windup: 0.34, active: 0.1, recover: 0.38, damage: 11, range: 78,
-    height: 40, posture: 12, knock: 145, lunge: 265, hurt: 0.28,
-    swingStart: -1.8, swingEnd: 1.12, heavy: true,
+    style: 'thrust', windup: 0.34, active: 0.1, recover: 0.38, damage: 11, range: 84,
+    height: 30, posture: 12, knock: 145, lunge: 265, hurt: 0.28, backReach: 4,
+    heavy: true,
   },
   b_sweep: {
-    windup: 0.62, active: 0.13, recover: 0.55, damage: 16, range: 80,
-    height: 40, posture: 15, knock: 175, lunge: 62, hurt: 0.34,
-    swingStart: -1.9, swingEnd: 1.15, heavy: true,
+    style: 'side', windup: 0.62, active: 0.13, recover: 0.55, damage: 16, range: 82,
+    height: 40, posture: 15, knock: 175, lunge: 62, hurt: 0.34, backReach: 22,
+    swingStart: -2.1, swingEnd: 1.18, heavy: true,
+  },
+  b_thrust: {
+    style: 'thrust', windup: 0.58, active: 0.12, recover: 0.52, damage: 18, range: 96,
+    height: 30, posture: 16, knock: 220, lunge: 230, hurt: 0.36, backReach: 4, heavy: true,
   },
   b_smash: {
-    windup: 0.82, active: 0.14, recover: 0.68, damage: 22, range: 84,
-    height: 44, posture: 20, knock: 230, lunge: 74, hurt: 0.44,
-    swingStart: -2.85, swingEnd: 0.55, heavy: true, unblockable: true,
+    style: 'overhead', windup: 0.82, active: 0.14, recover: 0.68, damage: 22, range: 84,
+    height: 44, posture: 20, knock: 230, lunge: 74, hurt: 0.44, backReach: 10,
+    swingStart: -2.85, swingEnd: 0.55, heavy: true, unblockable: true, charged: true,
   },
   boss_slash: {
-    windup: 0.34, active: 0.08, recover: 0.28, damage: 11, range: 72,
-    height: 40, posture: 10, knock: 120, lunge: 110, hurt: 0.24,
-    swingStart: -1.8, swingEnd: 1.05,
+    style: 'side', windup: 0.34, active: 0.08, recover: 0.28, damage: 11, range: 74,
+    height: 40, posture: 10, knock: 120, lunge: 110, hurt: 0.24, backReach: 18,
+    swingStart: -1.95, swingEnd: 1.08,
   },
   boss_slash2: {
-    windup: 0.22, active: 0.08, recover: 0.3, damage: 12, range: 74,
-    height: 40, posture: 10, knock: 130, lunge: 120, hurt: 0.24,
+    style: 'side', windup: 0.22, active: 0.08, recover: 0.3, damage: 12, range: 76,
+    height: 40, posture: 10, knock: 130, lunge: 120, hurt: 0.24, backReach: 16,
     swingStart: -1.6, swingEnd: 1.12,
   },
+  boss_thrust: {
+    style: 'thrust', windup: 0.32, active: 0.08, recover: 0.4, damage: 13, range: 96,
+    height: 30, posture: 12, knock: 150, lunge: 230, hurt: 0.27, backReach: 4,
+  },
   boss_red: {
-    windup: 0.62, active: 0.13, recover: 0.5, damage: 20, range: 84,
-    height: 42, posture: 18, knock: 230, lunge: 100, hurt: 0.42,
-    swingStart: -2.75, swingEnd: 0.6, heavy: true, unblockable: true,
+    style: 'overhead', windup: 0.62, active: 0.13, recover: 0.5, damage: 20, range: 84,
+    height: 42, posture: 18, knock: 230, lunge: 100, hurt: 0.42, backReach: 10,
+    swingStart: -2.75, swingEnd: 0.6, heavy: true, unblockable: true, charged: true,
   },
   boss_quick: {
-    windup: 0.2, active: 0.07, recover: 0.24, damage: 9, range: 68,
-    height: 38, posture: 8, knock: 95, lunge: 90, hurt: 0.2,
+    style: 'side', windup: 0.2, active: 0.07, recover: 0.24, damage: 9, range: 70,
+    height: 38, posture: 8, knock: 95, lunge: 90, hurt: 0.2, backReach: 14,
     swingStart: -1.55, swingEnd: 1.0,
   },
   boss_lunge: {
-    windup: 0.55, active: 0.14, recover: 0.55, damage: 24, range: 96,
-    height: 44, posture: 22, knock: 260, lunge: 300, hurt: 0.46,
-    swingStart: -1.9, swingEnd: 1.15, heavy: true, unblockable: true,
+    style: 'thrust', windup: 0.55, active: 0.14, recover: 0.55, damage: 24, range: 100,
+    height: 34, posture: 22, knock: 260, lunge: 300, hurt: 0.46, backReach: 4,
+    heavy: true, unblockable: true, charged: true,
+    swingStart: -1.9, swingEnd: 1.15,
   },
 };
 
@@ -606,23 +639,30 @@ const PATTERNS = {
   ronin: [
     ['r_slash'],
     ['r_slash', 'r_slash2'],
+    ['r_thrust'],
+    ['r_slash', 'r_thrust'],
     ['r_heavy'],
     ['r_slash', 'r_heavy'],
   ],
   ninja: [
     ['n_slash'],
-    ['n_dash'],
+    ['n_thrust'],
     ['n_slash', 'n_slash'],
-    ['n_slash', 'n_dash'],
+    ['n_slash', 'n_thrust'],
+    ['n_dash'],
+    ['n_thrust', 'n_dash'],
   ],
   brute: [
     ['b_sweep'],
+    ['b_thrust'],
     ['b_smash'],
     ['b_sweep', 'b_smash'],
+    ['b_sweep', 'b_thrust'],
   ],
   boss: [
     ['boss_slash', 'boss_slash2', 'boss_red'],
-    ['boss_quick', 'boss_quick', 'boss_lunge'],
+    ['boss_quick', 'boss_thrust', 'boss_lunge'],
+    ['boss_thrust'],
     ['boss_lunge'],
     ['boss_slash', 'boss_red'],
     ['boss_quick', 'boss_slash2', 'boss_lunge'],
@@ -879,6 +919,7 @@ class Fighter {
     this.hitLanded = false;
     this.comboWindow = 0;
     this.vx = this.facing * move.lunge;
+    if (move.charged) sound.charge();
   }
 
   updateAttack(dt, game) {
@@ -889,7 +930,7 @@ class Fighter {
     }
     if (!this.swingPlayed && this.stateT >= a.windup) {
       this.swingPlayed = true;
-      sound.swing(!!a.heavy);
+      sound.swing(!!a.heavy, a.style);
     }
     if (this.stateT >= a.windup && this.stateT <= a.windup + a.active) {
       this.performHits(game);
@@ -1014,7 +1055,8 @@ class Fighter {
   inHitbox(target, attack) {
     const dx = (target.x - this.x) * this.facing;
     const dy = Math.abs(target.y - this.y);
-    return dx > -10 && dx < attack.range + target.w * 0.45 && dy < attack.height;
+    const back = attack.backReach !== undefined ? attack.backReach : 10;
+    return dx > -back && dx < attack.range + target.w * 0.45 && dy < attack.height;
   }
 
   performHits(game) {
@@ -1236,13 +1278,29 @@ class Fighter {
   }
 
   startEnemyPattern(game, dist) {
-    let list = PATTERNS[this.kind] || PATTERNS.ronin;
-    let chosen = pick(list);
+    const list = PATTERNS[this.kind] || PATTERNS.ronin;
+    const firstStyle = (pattern) => {
+      const move = MOVES[pattern[0]];
+      return move ? move.style : 'side';
+    };
+    let chosen;
     if (this.kind === 'boss') {
       if (dist > 125) {
-        chosen = pick([PATTERNS.boss[1], PATTERNS.boss[2], PATTERNS.boss[4]]);
+        chosen = pick([PATTERNS.boss[1], PATTERNS.boss[2], PATTERNS.boss[3], PATTERNS.boss[5]]);
       } else if (this.phase === 2 && Math.random() < 0.4) {
         chosen = pick([PATTERNS.boss[0], PATTERNS.boss[1], PATTERNS.boss[4]]);
+      }
+    }
+    if (!chosen) {
+      // Thrusts answer distance; wide side cuts are saved for close pressure.
+      const thrusts = list.filter((p) => firstStyle(p) === 'thrust');
+      const sides = list.filter((p) => firstStyle(p) !== 'thrust');
+      if (dist > 72 && thrusts.length && Math.random() < 0.7) {
+        chosen = pick(thrusts);
+      } else if (dist < 54 && sides.length && Math.random() < 0.68) {
+        chosen = pick(sides);
+      } else {
+        chosen = pick(list);
       }
     }
     this.enemyPattern = chosen.slice();
@@ -1521,6 +1579,7 @@ class Game {
       enemy.update(worldDt, this);
     }
 
+    this.updateChargeFx(worldDt);
     this.resolveCollisions(worldDt);
     this.updateEffects(worldDt);
     this.updateCamera(worldDt);
@@ -1808,6 +1867,33 @@ class Game {
         vx: rnd(-18, 18), vy: rnd(-48, -16), grav: -8, drag: 0.7,
         life: rnd(0.45, 0.9), max: 0.9, size: 1,
         color: Math.random() < 0.5 ? '#a8e8a4' : '#e8d58a',
+      });
+    }
+  }
+
+  updateChargeFx(dt) {
+    const fighters = [this.player, ...this.enemies];
+    for (const f of fighters) {
+      const charging = f.alive && f.state === 'attack' && f.attack && f.attack.charged &&
+        f.stateT < f.attack.windup;
+      if (!charging) {
+        f.chargeFx = 0;
+        continue;
+      }
+      f.chargeFx = (f.chargeFx || 0) - dt;
+      if (f.chargeFx > 0) continue;
+      f.chargeFx = 0.055;
+      const k = clamp(f.stateT / Math.max(0.001, f.attack.windup), 0, 1);
+      const a = rnd(0, TAU);
+      const r = rnd(10, 18 + k * 12);
+      this.addParticle({
+        type: 'spark',
+        x: f.x + Math.cos(a) * r,
+        y: f.y - 30 + Math.sin(a) * r * 0.65,
+        vx: -Math.cos(a) * rnd(18, 44),
+        vy: -Math.sin(a) * rnd(12, 30) - 10,
+        grav: -12, drag: 1.2, life: rnd(0.18, 0.38), max: 0.38, size: 1,
+        color: f.isPlayer ? '#ffe6a4' : '#ffc27a',
       });
     }
   }
@@ -2377,6 +2463,31 @@ function swordPose(f) {
   const st = f.state;
   if (st === 'attack' && f.attack) {
     const a = f.attack;
+    if (a.style === 'thrust') {
+      const wind = Math.max(0.001, a.windup);
+      const activeEnd = a.windup + a.active;
+      let handX;
+      if (t < a.windup) {
+        handX = lerp(3, -2, easeOut(t / wind));
+      } else if (t < activeEnd) {
+        handX = lerp(-2, 19, easeInOut((t - a.windup) / Math.max(0.001, a.active)));
+      } else {
+        const k = clamp((t - activeEnd) / Math.max(0.001, a.recover), 0, 1);
+        handX = lerp(19, 3, easeOut(k));
+      }
+      const active = t >= a.windup - 0.02 && t <= activeEnd + 0.035;
+      return {
+        handX, handY: -29, angle: 0.04,
+        glow: active ? 1 : t < a.windup ? 0.35 : 0.15,
+        glowColor: a.unblockable ? '#ff6b58' : a.heavy ? '#f3d18a' : '#c8f4ee',
+        trail: active, thrust: true,
+        trailStart: 0, trailEnd: 0,
+        trailColor: a.unblockable ? 'rgba(255,92,78,' : 'rgba(230,255,249,',
+        trailWidth: a.heavy ? 4 : 2.5,
+        charging: !!a.charged && t < a.windup,
+        chargeProgress: a.charged ? clamp(t / Math.max(0.001, a.windup), 0, 1) : 0,
+      };
+    }
     let angle;
     if (t < a.windup) {
       angle = lerp(-0.55, a.swingStart, easeOut(t / Math.max(0.001, a.windup)));
@@ -2389,15 +2500,18 @@ function swordPose(f) {
     const handX = 3 + Math.cos(angle) * 8;
     const handY = -31 + Math.sin(angle) * 8;
     const active = t >= a.windup - 0.02 && t <= a.windup + a.active + 0.035;
+    const chargeProgress = a.charged ? clamp(t / Math.max(0.001, a.windup), 0, 1) : 0;
     return {
       handX, handY, angle,
-      glow: active ? 1 : t < a.windup ? 0.4 : 0.15,
+      glow: active ? 1 : t < a.windup ? (a.charged ? 0.35 + chargeProgress * 0.6 : 0.4) : 0.15,
       glowColor: a.unblockable ? '#ff6b58' : a.heavy ? '#f3d18a' : '#c8f4ee',
       trail: active,
       trailStart: a.swingStart,
       trailEnd: angle,
       trailColor: a.unblockable ? 'rgba(255,92,78,' : 'rgba(230,255,249,',
       trailWidth: a.heavy ? 4 : 2.5,
+      charging: !!a.charged && t < a.windup,
+      chargeProgress,
     };
   }
   if (st === 'parry') {
@@ -2683,26 +2797,51 @@ function drawFighter(f, game, opts = {}) {
   if (pose.trail) {
     const a = f.attack;
     const progress = clamp((t - a.windup) / Math.max(0.001, a.active), 0, 1);
-    const end = lerp(a.swingStart, a.swingEnd, easeInOut(progress));
     const alphaTrail = 0.28 + (1 - progress) * 0.35;
-    ctx.save();
-    ctx.translate(3, -31 + bob + crouch);
-    ctx.strokeStyle = pose.trailColor + alphaTrail * 0.34 + ')';
-    ctx.lineWidth = pose.trailWidth + 4;
-    ctx.beginPath();
-    ctx.arc(0, 0, 27, a.swingStart, end);
-    ctx.stroke();
-    ctx.strokeStyle = pose.trailColor + alphaTrail + ')';
-    ctx.lineWidth = pose.trailWidth;
-    ctx.beginPath();
-    ctx.arc(0, 0, 27, a.swingStart, end);
-    ctx.stroke();
-    ctx.strokeStyle = 'rgba(255,255,255,' + alphaTrail * 0.72 + ')';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(0, 0, 27, a.swingStart, end);
-    ctx.stroke();
-    ctx.restore();
+    if (pose.thrust) {
+      const y = pose.handY + bob + crouch;
+      const tip = pose.handX + 28;
+      ctx.save();
+      ctx.strokeStyle = pose.trailColor + alphaTrail * 0.34 + ')';
+      ctx.lineWidth = pose.trailWidth + 4;
+      ctx.beginPath();
+      ctx.moveTo(pose.handX - 5, y);
+      ctx.lineTo(tip + 9, y);
+      ctx.stroke();
+      ctx.strokeStyle = pose.trailColor + alphaTrail + ')';
+      ctx.lineWidth = pose.trailWidth;
+      ctx.beginPath();
+      ctx.moveTo(pose.handX - 3, y);
+      ctx.lineTo(tip + 5, y);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,' + alphaTrail * 0.78 + ')';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pose.handX, y - 1);
+      ctx.lineTo(tip + 2, y - 1);
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      const end = lerp(a.swingStart, a.swingEnd, easeInOut(progress));
+      ctx.save();
+      ctx.translate(3, -31 + bob + crouch);
+      ctx.strokeStyle = pose.trailColor + alphaTrail * 0.34 + ')';
+      ctx.lineWidth = pose.trailWidth + 4;
+      ctx.beginPath();
+      ctx.arc(0, 0, 27, a.swingStart, end);
+      ctx.stroke();
+      ctx.strokeStyle = pose.trailColor + alphaTrail + ')';
+      ctx.lineWidth = pose.trailWidth;
+      ctx.beginPath();
+      ctx.arc(0, 0, 27, a.swingStart, end);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,' + alphaTrail * 0.72 + ')';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(0, 0, 27, a.swingStart, end);
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   localLimb(4, -31 + bob + crouch, pose.handX, pose.handY + bob + crouch, 3, pal.skin);
@@ -2713,6 +2852,33 @@ function drawFighter(f, game, opts = {}) {
     handX: pose.handX,
     handY: pose.handY + bob + crouch,
   });
+
+  if (pose.charging) {
+    const k = pose.chargeProgress;
+    const pulse = 0.5 + Math.sin(game.time * 24) * 0.5;
+    const cx = 3;
+    const cy = -30 + bob + crouch;
+    ctx.save();
+    ctx.globalAlpha = alpha * (0.08 + k * 0.2);
+    ctx.fillStyle = '#ffcf6e';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 11 + k * 10 + pulse * 2, 0, TAU);
+    ctx.fill();
+    ctx.globalAlpha = alpha * (0.35 + k * 0.6);
+    ctx.strokeStyle = '#f3d18a';
+    ctx.lineWidth = 1 + k * 1.6;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 17 + k * 9 + pulse * 2, -2.65, 0.55);
+    ctx.stroke();
+    ctx.globalAlpha = alpha * (0.4 + k * 0.5);
+    ctx.fillStyle = '#fff0bd';
+    for (let i = 0; i < 4; i++) {
+      const orbit = game.time * (3.4 + i * 0.4) + i * 1.7;
+      const r = 10 + k * 13 + (i % 2) * 4;
+      ctx.fillRect(round(cx + Math.cos(orbit) * r), round(cy + Math.sin(orbit) * r * 0.7), 2, 2);
+    }
+    ctx.restore();
+  }
 
   if (st === 'parry') {
     const pulse = 0.55 + Math.sin(game.time * 18) * 0.18;
@@ -2771,6 +2937,13 @@ function drawFighterStatus(f, game) {
       ctx.globalAlpha = 0.65 + pulse * 0.35;
       pixelDiamond(x, iy, 5, 'rgba(176,35,45,0.92)');
       drawText('危', x, iy + 3, 6, '#ffe0d2', 'center', '700', 'rgba(0,0,0,0.5)');
+      ctx.globalAlpha = 1;
+    } else if (f.attack.style === 'thrust') {
+      // A long amber line reads as a straight thrust; the white diamond is a side cut.
+      ctx.globalAlpha = 0.35 + k * 0.65;
+      ctx.fillStyle = 'rgba(255,226,158,0.92)';
+      ctx.fillRect(x - 8, iy - 0.5, 16, 1);
+      pixelDiamond(x, iy, 2.5, 'rgba(255,236,184,0.95)');
       ctx.globalAlpha = 1;
     } else {
       ctx.globalAlpha = 0.35 + k * 0.65;
@@ -2934,7 +3107,7 @@ function drawHUD(game) {
     const a = clamp(game.tutorialT / 2.2, 0, 1);
     ctx.globalAlpha = a;
     if (!isTouch) {
-      const text = 'A D  MOVE    SPACE  JUMP    J  STRIKE    K  PARRY    L  DODGE';
+      const text = 'A D  MOVE    SPACE  JUMP    J J J  COMBO    K  PARRY    L  DODGE';
       ctx.fillStyle = 'rgba(6,4,10,0.7)';
       ctx.fillRect(86, VH - 28, 468, 18);
       ctx.strokeStyle = 'rgba(232,197,122,0.18)';
